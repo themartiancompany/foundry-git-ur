@@ -82,6 +82,7 @@ prepare() {
     _target="${CARCH}-linux-androideabi"
   cd \
     "${_pkgname}-${_branch}"
+  RUST_BACKTRACE=1 \
   cargo \
     fetch \
       --locked \
