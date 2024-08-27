@@ -8,6 +8,9 @@ _os="$( \
   uname \
     -o)"
 _git=false
+_cargo="false"
+[[ "${_os}" == "Android" ]] && \
+  _cargo=true
 _pkg=foundry
 _pkgname="${_pkg}"
 pkgname="${_pkgname}-git"
@@ -80,47 +83,70 @@ prepare() {
   _target="${CARCH}-unknown-linux-gnu"
   [[ "${_os}" == "Android" ]] && \
     _target="${CARCH}-linux-androideabi"
-  cd \
-    "${_pkgname}-${_branch}"
-  RUST_BACKTRACE=1 \
-  cargo \
-    fetch \
-      --locked \
-      --target \
-      "${_target}"
+  if [[ "${_cargo}" == 'false' ]]; then
+    cd \
+      "${_pkgname}-${_branch}"
+    RUST_BACKTRACE=1 \
+    CARGO_PROFILE_RELEASE_BUILD_OVERRIDE_DEBUG=true \
+    cargo \
+      fetch \
+        --locked \
+        --target \
+        "${_target}"
+  fi
 }
 
 build() {
-  cd \
-    "${_pkgname}-${_branch}"
-  export \
-    RUSTUP_TOOLCHAIN=stable
-  export \
-    CARGO_TARGET_DIR=target
-  cargo \
-    build \
-      --frozen \
-      --release \
-      --all-features
+  if [[ "${_cargo}" == 'false' ]]; then
+    cd \
+      "${_pkgname}-${_branch}"
+    export \
+      RUSTUP_TOOLCHAIN=stable
+    export \
+      CARGO_TARGET_DIR=target
+    RUST_BACKTRACE=1 \
+    CARGO_PROFILE_RELEASE_BUILD_OVERRIDE_DEBUG=true \
+    cargo \
+      build \
+        --frozen \
+        --release \
+        --all-features
+  fi
 }
 
 package() {
-  cd \
-    "${_pkgname}-${_branch}"
-  find \
-    target/release \
-    -maxdepth \
-      1 \
-    -executable \
-    -type \
-      f \
-    -exec \
-      install \
-        -Dm0755 \
+  if [[ "${_cargo}" == 'false' ]]; then
+    cd \
+      "${_pkgname}-${_branch}"
+    find \
+      target/release \
+      -maxdepth \
+        1 \
+      -executable \
+      -type \
+        f \
+      -exec \
+        install \
+          -Dm0755 \
 	-t \
 	"${pkgdir}/usr/bin/" \
 	{} \
-	+
+      +
+  elif [[ "${_cargo}" == 'true' ]]; then
+    cargo \
+      install \
+      --root \
+        "${pkgdir}" \
+      --git \
+        https://github.com/foundry-rs/foundry \
+      --profile \
+        release \
+      --locked \
+      forge \
+      cast \
+      chisel \
+      anvil
+  fi
   # TODO completions
   # TODO doc
   install \
