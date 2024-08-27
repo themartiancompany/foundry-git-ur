@@ -14,7 +14,7 @@ _cargo="false"
 _pkg=foundry
 _pkgname="${_pkg}"
 pkgname="${_pkgname}-git"
-pkgver=r2015.925626516
+pkgver=r9.1675a00
 pkgrel=1
 _pkgdesc=(
   "A blazing fast, portable and modular toolkit"
